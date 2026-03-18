@@ -63,11 +63,9 @@ const addProductReview = async (req, res) => {
     }
 };
 
-const getProductReviews = async (req, res) => {
+const getAllProductReviews = async (req, res) => {
     try {
-        const { productId } = req.params;
-
-        const reviews = await ProductReview.find({ productId });
+        const reviews = await ProductReview.find();
         res.status(200).json({
             success: true,
             data: reviews,
@@ -81,4 +79,132 @@ const getProductReviews = async (req, res) => {
     }
 };
 
-module.exports = { addProductReview, getProductReviews };
+const getProductReviewById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const review = await ProductReview.findById(id);
+
+        if (!review) {
+            return res.status(404).json({
+                success: false,
+                message: "Review not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: review,
+        });
+    } catch (e) {
+        console.log(e);
+        res.status(500).json({
+            success: false,
+            message: "Error",
+        });
+    }
+};
+
+const updateProductReview = async (req, res) => {
+    try {
+        const { id, productId, userId, userName, reviewMessage, reviewValue } =
+            req.body;
+
+        const review = await ProductReview.findById(id);
+
+        if (!review) {
+            return res.status(404).json({
+                success: false,
+                message: "Review not found",
+            });
+        }
+
+        review.productId = productId;
+        review.userId = userId;
+        review.userName = userName;
+        review.reviewMessage = reviewMessage;
+        review.reviewValue = reviewValue;
+
+        await review.save();
+
+        res.status(200).json({
+            success: true,
+            data: review,
+        });
+    } catch (e) {
+        console.log(e);
+        res.status(500).json({
+            success: false,
+            message: "Error",
+        });
+    }
+};
+
+    const deleteroductReview = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const review = await ProductReview.findById(id);
+
+        if (!review) {
+            return res.status(404).json({
+                success: false,
+                message: "Review not found",
+            });
+        }
+
+        await review.remove();
+
+        res.status(200).json({
+            success: true,
+            data: review,
+        });
+    } catch (e) {
+        console.log(e);
+        res.status(500).json({
+            success: false,
+            message: "Error",
+        });
+    }
+};
+
+const deleteProductReview = async (req, res) => {
+    try {
+        const { productId, userId } = req.params;
+
+        const review = await ProductReview.findOne({
+            productId,
+            userId,
+        });
+
+        if (!review) {
+            return res.status(404).json({
+                success: false,
+                message: "Review not found",
+            });
+        }
+
+        await review.remove();
+
+        const reviews = await ProductReview.find({ productId });
+        const totalReviewsLength = reviews.length;
+        const averageReview =
+            reviews.reduce((sum, reviewItem) => sum + reviewItem.reviewValue, 0) /
+            totalReviewsLength;
+
+        await Product.findByIdAndUpdate(productId, { averageReview });
+
+        res.status(200).json({
+            success: true,
+            data: review,
+        });
+    } catch (e) {
+        console.log(e);
+        res.status(500).json({
+            success: false,
+            message: "Error",
+        });
+    }
+};
+
+module.exports = { addProductReview, getAllProductReviews, getProductReviewById, updateProductReview, deleteProductReview }; 
